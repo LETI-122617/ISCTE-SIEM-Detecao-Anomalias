@@ -32,7 +32,7 @@ Este projeto aborda o problema da "fadiga de alertas" gerada pelo elevado volume
 
 ## 🚀 Trabalhos Futuros (Parte 2)
 Este repositório será atualizado futuramente para acomodar a **Parte 2 (P-P2)** do projeto, que incluirá:
-- Implementação prática das *queries* nativas em ambiente SIEM (e.g., Splunk / Elastic Stack).
+- Implementação prática das *queries* nativas em ambiente SIEM (e.g., Splunk).
 - Simulação de tráfego benigno e injeção de ataques de força bruta.
 - Calibração empírica da constante de sensibilidade ($k$) e janela temporal ($N$).
 - Validação através de métricas de desempenho (Matriz de Confusão, *F-Score*, FPR).
