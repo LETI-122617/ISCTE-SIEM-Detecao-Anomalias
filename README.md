@@ -114,21 +114,30 @@ Os cenários principais totalizaram **121 janelas de 1 minuto** (60 minutos no a
 
 ## Estrutura do Repositório
 
+## Estrutura do Repositório
+
 ```text
 ISCTE-SIEM-Deteccao-Anomalias/
 ├── README.md
-├── spl/
-│   └── deteccao_forca_bruta.spl
 ├── dados/
-│   ├── Teste_Inicial.csv
-│   ├── Ataque_Volumetrico.csv
-│   └── Ataque_Low_and_Slow.csv
-├── figuras/
-│   ├── grafico_teste_inicial.png
-│   ├── grafico_volumetrico.png
-│   └── grafico_low_slow.png
-└── relatorio/
-    └── main.tex
+│   ├── Ataque_Low_&_Slow_(O_desafio_furtivo).csv
+│   ├── Ataque_Volumétrico_(Ruído).csv
+│   └── Teste_Inicial.csv
+├── relatorio/
+│   ├── figuras/
+│   │   ├── Ataque Low & Slow.png
+│   │   ├── Ataque Volumétrico.png
+│   │   ├── diagrama_pesquisa.png
+│   │   ├── grafico_limiar.png
+│   │   ├── grafico_teste_inicial.png
+│   │   └── logo_iscte.png
+│   ├── Deteção_de_Anomalias_e_Redução_de_Falsos_Positivos_em_Ambientes_SIEM.pdf
+│   └── main.tex
+├── revisao_sistematica/
+│   ├── articles.xls
+│   └── data_extraction.xls
+└── scripts/
+    └── gerar_grafico_limiar.py
 ```
 
 ---
