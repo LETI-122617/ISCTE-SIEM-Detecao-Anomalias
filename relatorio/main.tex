@@ -1,0 +1,450 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[portuguese]{babel}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{float}
+\usepackage{xcolor}
+\usepackage{listings}
+
+
+\definecolor{codebg}{RGB}{246,248,250}
+\definecolor{codegray}{RGB}{100,100,100}
+
+\lstset{
+    backgroundcolor=\color{codebg},
+    basicstyle=\ttfamily\footnotesize,
+    breaklines=true,
+    frame=single,
+    rulecolor=\color{codegray!40},
+    numbers=left,
+    numberstyle=\tiny\color{codegray},
+    captionpos=b,
+    literate=
+        {á}{{\'a}}1 {à}{{\`a}}1 {ã}{{\~a}}1 {â}{{\^a}}1
+        {é}{{\'e}}1 {ê}{{\^e}}1 {í}{{\'i}}1 {ó}{{\'o}}1
+        {õ}{{\~o}}1 {ô}{{\^o}}1 {ú}{{\'u}}1 {ç}{{\c{c}}}1
+        {Á}{{\'A}}1 {Ã}{{\~A}}1 {É}{{\'E}}1 {Í}{{\'I}}1
+        {Ó}{{\'O}}1 {Õ}{{\~O}}1 {Ú}{{\'U}}1 {Ç}{{\c{C}}}1
+}
+\renewcommand{\lstlistingname}{Listagem}
+\usepackage{hyperref}
+\usepackage{geometry}
+\geometry{a4paper, margin=2.5cm}
+
+\begin{document}
+
+% --- PÁGINA DE ROSTO (Página 1) ---
+\begin{titlepage}
+    \centering
+    \vspace*{1cm}
+    
+    % Substitui 'logo_iscte.png' pelo nome exato do ficheiro
+    \includegraphics[width=6cm]{logo_iscte.png} 
+    
+    \vspace{1.5cm}
+    {\Large \textbf{Mestrado em Engenharia de Telecomunicações e Informática}}\\[5pt]
+    {\large Segurança em Redes e Sistemas de Informação}\par
+    
+    \vspace{1.5cm}
+    {\LARGE \bfseries Deteção de Anomalias e Redução de Falsos Positivos em Ambientes SIEM: Modelação Estatística de Ataques de Força Bruta\par}
+    \vspace{1.5cm}
+    
+    {\Large \textbf{Autores:}}\\[10pt]
+    {\large Tomás Cerveira, 122617}\\[5pt]
+    {\large Alexandre Duarte, 122657}\\[5pt]
+    {\large Lara Machado, 122655}\\[5pt]
+    {\large Eduardo Real, 122608}\par
+    \vspace{1.5cm}
+    
+    {\large \textbf{Docentes:}\\ Daniel Pesqueira Morgado e Daniel Maximino Caçador}\par
+
+\vspace{1cm}
+    {\normalsize \textbf{Repositório do Projeto (GitHub):}\\ \url{https://github.com/LETI-122617/ISCTE-SIEM-Deteccao-Anomalias}}\par
+    
+    \vfill
+    {\large 30-11-2026\par}
+\end{titlepage}
+
+% --- RESUMO E PALAVRAS-CHAVE (Página 2) ---
+\newpage
+\thispagestyle{plain}
+\section*{Resumo}
+\addcontentsline{toc}{section}{Resumo}
+Os Centros de Operações de Segurança (SOC) enfrentam diariamente o desafio de processar grandes volumes de alertas gerados por sistemas de monitorização, sendo muitos destes alertas falsos positivos que não representam ameaças reais. Este cenário gera fadiga de alertas e prejudica a capacidade de resposta a incidentes críticos. O presente trabalho aborda o problema da redução de falsos positivos em ambientes de \textit{Security Information and Event Management} (SIEM), propondo e validando a substituição de regras analíticas baseadas em limites estáticos por um modelo de deteção estatístico adaptativo. A metodologia combinou uma revisão sistemática da literatura suportada pela plataforma Parsifal, com a análise comparativa de seis estudos de referência, e uma implementação laboratorial nativa em \textit{Splunk Enterprise} recorrendo a \textit{Search Processing Language} (SPL). Através do comando \texttt{streamstats} sobre uma janela deslizante de 30 minutos, calculou-se em tempo real a média móvel e o desvio padrão de eventos de autenticação SSH falhados para isolar ataques de força bruta sem a latência e o custo computacional associados a arquiteturas baseadas em \textit{Large Language Models} (LLMs). A validação experimental, conduzida com ataques volumétricos e furtivos (\textit{Low \& Slow}) gerados em \textit{Kali Linux}, alcançou 100\% de precisão e 0,00\% de taxa de falsos positivos (FPR) em todos os cenários, atingindo um \textit{F-Score} de 80,00\% no ataque volumétrico com deteção imediata no primeiro minuto. Em contrapartida, o cenário \textit{Low \& Slow} comprovou empiricamente a vulnerabilidade à contaminação progressiva da \textit{baseline} (\textit{Recall} de 0,00\%), evidenciando a necessidade de complementar modelos estatísticos móveis com mecanismos robustos de preservação do histórico.
+
+\vspace{1em}
+\noindent\textbf{Palavras-chave:} SIEM, Falsos Positivos, Deteção de Anomalias, Força Bruta, SOC, Modelos Estatísticos, Splunk.
+
+% --- ÍNDICE (Página 3) ---
+\newpage
+\renewcommand{\contentsname}{Índice}
+\tableofcontents
+
+\vspace{1.5cm}
+\newpage
+\phantomsection
+\renewcommand{\listfigurename}{Índice de Figuras}
+\addcontentsline{toc}{section}{Índice de Figuras}
+\listoffigures
+
+\vspace{1.5cm}
+
+\phantomsection
+\renewcommand{\listtablename}{Índice de Tabelas}
+\addcontentsline{toc}{section}{Índice de Tabelas}
+\listoftables
+
+% --- CORPO DO DOCUMENTO (Página 4 em diante) ---
+\newpage
+
+\section*{Glossário}
+\addcontentsline{toc}{section}{Glossário}
+\begin{itemize}
+    \item \textbf{CMDB} -- Configuration Management Database
+    \item \textbf{EC} -- Exclusion Criteria (Critério de Exclusão)
+    \item \textbf{FN} -- \textit{False Negative} (Falso Negativo)
+    \item \textbf{FP} -- \textit{False Positive} (Falso Positivo)
+    \item \textbf{FPR} -- False Positive Rate
+    \item \textbf{IAM} -- Identity and Access Management
+    \item \textbf{IC} -- Inclusion Criteria (Critério de Inclusão)
+    \item \textbf{IDS} -- Intrusion Detection System
+    \item \textbf{KQL} -- Kibana Query Language
+    \item \textbf{LLM} -- Large Language Model
+    \item \textbf{MAD} -- Median Absolute Deviation (Desvio Absoluto da Mediana)
+    \item \textbf{MITRE ATT\&CK} -- Adversarial Tactics, Techniques, and Common Knowledge
+    \item \textbf{ML} -- Machine Learning
+    \item \textbf{ROC-AUC} -- Receiver Operating Characteristic - Area Under Curve
+    \item \textbf{RQ} -- Research Question (Questão de Pesquisa)
+    \item \textbf{SIEM} -- Security Information and Event Management
+    \item \textbf{SOC} -- Security Operations Center
+    \item \textbf{SPL} -- Search Processing Language
+    \item \textbf{SSH} -- Secure Shell
+    \item \textbf{TCS} -- Threat Confidence Score
+    \item \textbf{TN} -- \textit{True Negative} (Negativo Verdadeiro)
+    \item \textbf{TP} -- \textit{True Positive} (Positivo Verdadeiro)
+\end{itemize}
+
+\newpage
+
+\section{Introdução}
+A capacidade de monitorizar redes e sistemas informáticos em tempo real é um pilar fundamental da cibersegurança. No entanto, existe um problema crítico relacionado com a eficácia das ferramentas de monitorização: a geração de um grande volume de alertas que não representam a real situação do ambiente computacional, dificultando a análise feita pelos administradores de sistemas. Estes falsos positivos obrigam as equipas de analistas a desperdiçar recursos na triagem de eventos benignos, atrasando a resposta a verdadeiros incidentes de segurança.
+
+Este projeto visa resolver o problema da ineficiência na deteção de intrusões provocada por regras de alerta estáticas. Como a literatura recente demonstra, a adoção de Inteligência Artificial massiva (como LLMs) para tentar solucionar este problema tem introduzido latências incompatíveis com o processamento em tempo real e agravado as taxas de falsos positivos (FPR) devido ao viés computacional. Para endereçar este desafio de forma otimizada, apresenta-se o estudo, a implementação nativa e a validação experimental de um modelo adaptativo num ambiente SIEM, focado na aplicação de funções matemáticas e estatísticas descritivas para estabelecer \textit{baselines} de comportamento normal na rede. Através do cálculo contínuo de médias móveis, desvios padrão dinâmicos e \textit{Z-scores}, avalia-se em que medida o sistema consegue filtrar o ruído benigno e identificar ataques de força bruta com um custo computacional residual.
+
+O documento encontra-se estruturado da seguinte forma: a Secção 2 apresenta a fundamentação teórica, detalhando a arquitetura SIEM, o impacto da fadiga de alertas num SOC e a modelação matemática proposta; a Secção 3 detalha a revisão sistemática da literatura e o estado da arte; a Secção 4 define a proposta de arquitetura e a metodologia laboratorial; a Secção 5 descreve a implementação prática em \textit{Splunk} e apresenta a validação experimental sobre ataques volumétricos e furtivos (\textit{Low \& Slow}), incluindo a matriz de confusão e a comparação com limiares estáticos; por fim, a Secção 6 expõe as conclusões globais alcançadas e perspetivas de trabalho futuro.
+
+\newpage
+
+\section{Fundamentação Teórica}
+\subsection{Security Operations Centers e a Plataforma SIEM}
+Os \textit{Security Operations Centers} (SOCs) desempenham um papel crítico na cibersegurança das organizações, garantindo a monitorização contínua, deteção e resposta a incidentes. O núcleo tecnológico destas operações assenta em plataformas \textit{Security Information and Event Management} (SIEM), que agregam volumes massivos de dados provenientes de sistemas de deteção e prevenção de intrusões (IDS/IPS) \cite{roy2026}. 
+
+Contudo, o crescimento exponencial do volume de dados gerados tem provocado um fenómeno severo de fadiga de alertas (\textit{alert fatigue}) entre as equipas de analistas. Este problema é impulsionado, na sua grande maioria, por elevadas taxas de falsos positivos resultantes de regras de deteção estáticas que carecem de contexto organizacional. A literatura demonstra a escala operacional deste desafio: os analistas operam sob intensa pressão temporal, conseguindo rever apenas uma fração dos alertas \cite{rieger2026, roy2026}. O impacto é massivo, uma vez que as operações de SOC recebem frequentemente mais de 10.000 eventos diários, estimando-se que cerca de 90\% destes registos representem falsos positivos \cite{yauri2026}. A ausência de adaptação dinâmica aos padrões de atividade normal da rede torna a monitorização ineficiente, resultando em respostas atrasadas, incidentes ignorados e exaustão psicológica das equipas de segurança \cite{rieger2026}.
+
+\subsection{Modelação Matemática da Deteção}
+Para colmatar as falhas das abordagens baseadas em limites estáticos e evitar a sobrecarga de arquiteturas \textit{black-box} de inteligência artificial, a nossa proposta teórica assenta na identificação de anomalias através da estatística descritiva aplicada nativamente aos \textit{logs} do SIEM. Esta lógica assemelha-se à modelação de desvios padronizados (\textit{Z-scores}) demonstrada por Mohanapriya et al. (2026), mas calculada em tempo real sobre séries temporais de eventos.
+
+O volume de eventos de autenticação falhados num instante $t$, denotado por $X_t$, é avaliado em relação ao histórico de tráfego. A média móvel ($\mu$) e o desvio padrão ($\sigma$) para uma janela de tempo com $N$ observações anteriores (excluindo propositadamente o instante atual $X_t$ no somatório de $i=1$ a $N$, para que o pico anómalo não mascare a própria \textit{baseline}) são calculados através das seguintes formulações matemáticas:
+\begin{equation}
+    \mu = \frac{1}{N} \sum_{i=1}^{N} X_{t-i}
+\end{equation}
+
+\begin{equation}
+    \sigma = \sqrt{\frac{1}{N} \sum_{i=1}^{N} (X_{t-i} - \mu)^2}
+\end{equation}
+
+Com base nestas métricas, o desvio normalizado (\textit{Z-score}) do tráfego atual é calculado para quantificar a distância do evento face ao comportamento esperado. Para evitar indeterminações matemáticas em janelas de tempo com tráfego perfeitamente constante (onde $\sigma = 0$), introduz-se uma constante residual $\epsilon$ (e.g., $\epsilon = 1$, garantindo um limite mínimo de variação natural aceitável):
+\begin{equation}
+    Z_t = \frac{X_t - \mu}{\sigma + \epsilon}
+\end{equation}
+
+Um alerta é acionado, indicando um potencial ataque de força bruta, se o desvio atual ultrapassar uma constante de limiar $k$ (onde $Z_t > k$). Matematicamente, resolvendo a inequação para o volume de eventos no SIEM, obtemos o critério direto de deteção da nossa arquitetura:
+\begin{equation}
+    X_t > \mu + k\sigma
+\end{equation}
+
+A constante $k$ atua como o calibrador de sensibilidade do SOC, sendo tipicamente definida com o valor 3, baseando-se na regra empírica da estatística para abranger 99,7\% do tráfego legítimo esperado. Refira-se que esta formulação assume uma distribuição aproximadamente normal das contagens de eventos, premissa que será validada com dados reais na Parte 2 do projeto. 
+
+Reconhece-se ainda a limitação inerente da contaminação da \textit{baseline}: um ataque lento e prolongado (\textit{low and slow}) pode inflacionar gradualmente os valores de $\mu$ e $\sigma$, mascarando a anomalia. Em trabalhos futuros, esta lacuna poderá ser mitigada pela exclusão de pontos já sinalizados da janela temporal ou pelo uso do Desvio Absoluto da Mediana (MAD). Do ponto de vista operacional, o cálculo contínuo destas métricas pode ser implementado de forma nativa através de linguagens de pesquisa do SIEM, como o \textit{Search Processing Language} (SPL) no Splunk (recorrendo ao comando \texttt{streamstats}) ou o \textit{Kibana Query Language} (KQL) na \textit{Elastic Stack}, dispensando \textit{hardware} dedicado.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.85\textwidth]{grafico_limiar.png}
+    \caption{Representação conceptual do limiar adaptativo ($\mu + k\sigma$) a isolar um pico anómalo de eventos de autenticação num SOC.}
+    \label{fig:grafico_limiar}
+\end{figure}
+
+\subsection{Métricas de Avaliação de Desempenho}
+Para validar a eficácia do modelo estatístico proposto e permitir uma comparação justa com as abordagens de \textit{Machine Learning} identificadas no estado da arte, o desempenho da deteção deve ser medido recorrendo à matriz de confusão. A avaliação da eficácia na redução de falsos positivos num SOC baseia-se nas seguintes métricas matemáticas:
+
+\textbf{Precisão (\textit{Precision}):} Avalia a proporção de alertas classificados como anómalos que correspondem a verdadeiros ataques, mitigando o ruído operacional:
+\begin{equation}
+    Precision = \frac{TP}{TP + FP}
+\end{equation}
+
+\textbf{Sensibilidade (\textit{Recall}):} Mede a capacidade do modelo em detetar a totalidade das ameaças reais, garantindo que incidentes críticos não são ignorados:
+\begin{equation}
+    Recall = \frac{TP}{TP + FN}
+\end{equation}
+
+\textbf{Especificidade (\textit{Specificity}):} Quantifica a capacidade do sistema em classificar corretamente o tráfego benigno, essencial para não gerar falsos alarmes:
+\begin{equation}
+    Specificity = \frac{TN}{TN + FP}
+\end{equation}
+
+\textbf{\textit{F-Score}:} Representa a média harmónica entre a Precisão e a Sensibilidade. Num ambiente SIEM, caracterizado por um forte desbalanceamento de classes (onde o volume de eventos benignos é ordens de grandeza superior ao de ataques), esta métrica é um dos indicadores mais robustos para avaliar o modelo:
+\begin{equation}
+    F\text{-}Score = 2 \times \frac{Precision \times Recall}{Precision + Recall}
+\end{equation}
+
+\section{Estado da Arte e Revisão Sistemática}
+Para compreender as abordagens atuais à redução de alertas, foi elaborado um protocolo de revisão sistemática de literatura. Para garantir o rigor metodológico, a revisão seguiu diretrizes estruturadas na plataforma Parsifal. A investigação foi norteada por quatro Questões de Pesquisa (RQ) fundamentais:
+\begin{itemize}
+    \item \textbf{RQ1:} Como é que as técnicas de modelação estatística e deteção de anomalias estão a ser aplicadas para reduzir falsos positivos em plataformas SIEM?
+    \item \textbf{RQ2:} Quais são as equações e funções matemáticas mais utilizadas pela comunidade académica para estabelecer \textit{baselines} de comportamento normal?
+    \item \textbf{RQ3:} De que forma é que o desempenho das regras dinâmicas de anomalias se compara com os métodos tradicionais de limites estáticos?
+    \item \textbf{RQ4:} Qual tem sido a evolução anual de publicações focadas na otimização de métricas de deteção em ambientes SIEM?
+\end{itemize}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\textwidth]{diagrama_pesquisa.png}
+    \caption{Fluxo do processo de seleção de estudos da revisão sistemática da literatura.}
+    \label{fig:fluxo_revisao}
+\end{figure}
+\newpage
+A extração de dados incidiu sobre publicações da última década (2016-2026), utilizando a seguinte \textit{string} de busca: \texttt{("SIEM"\ OR\ "Security Information and Event Management")\ AND\ ("false positive*"\ OR\ "alert fatigue"\ OR\ "false alarm*")\ AND\ ("anomaly detection"\ OR\ "statistic*"\ OR\ "brute-force"\ OR\ "brute force")}.
+
+O protocolo estabeleceu Critérios de Inclusão (IC) rigorosos, exigindo: artigos publicados em revistas ou conferências científicas; que abordem ataques de força bruta; que apresentem métricas de avaliação quantitativa; que utilizem métodos estatísticos para deteção; e relacionados com deteção de anomalias em ambientes SIEM. Em contrapartida, definiram-se Critérios de Exclusão (EC) para rejeitar: estudos focados na prevenção (Firewalls/Antivírus) e não na deteção de intrusões; publicações puramente teóricas sem métodos de redução de ruído testados; trabalhos duplicados ou sem texto integral disponível; e trabalhos desalinhados das questões de pesquisa.
+
+O processo de triagem (Figura \ref{fig:fluxo_revisao}) iniciou-se com 651 artigos recolhidos de bases de dados científicas (ACM, IEEE, ScienceDirect e Scopus). Numa primeira fase local de remoção de duplicados, não se registaram exclusões, transitando os 651 artigos para a filtragem por título e palavras-chave, que reduziu a amostra substancialmente para 130 documentos. A subsequente filtragem por \textit{abstract} isolou 38 artigos. Após a combinação dos resultados das quatro bases, realizou-se uma segunda remoção de duplicados globais (restando 30 artigos), seguida de uma triagem pelo método de três passagens (\textit{Three-pass Based Method}), que reduziu o conjunto para 15 trabalhos. Por fim, na fase de leitura integral (\textit{Full Text}), a aplicação dos Critérios de Exclusão (EC) culminou na seleção final de 6 estudos para análise aprofundada.
+
+\subsection{Abordagens Atuais na Redução de Falsos Positivos}
+Para mitigar a fadiga de alertas, a comunidade académica tem explorado soluções avançadas que visam injetar contexto e dinamicidade na classificação de eventos. Trabalhos de referência exploram a aplicação de algoritmos de aprendizado de máquina supervisionado aliados ao enriquecimento de atributos organizacionais. Moraes et al. (2017) propuseram uma arquitetura de duas fases aplicada aos \textit{logs} de um IDS Snort: primeiramente, os alertas informativos de baixa prioridade (prioridade 3) são filtrados de forma estática, o que num estudo de caso real reduziu o volume bruto de mais de 2,2 milhões de alertas mensais para cerca de 26 mil \cite{moraes2017}. Numa segunda fase, os alertas críticos sobreviventes são enriquecidos com dados externos (como geolocalização via \textit{GeoIP}) e topologia da rede (papel e função do \textit{host}) \cite{moraes2017}. Ao submeter estes dados a classificadores, o estudo demonstrou que o algoritmo \textit{Random Forest} supera o \textit{k-Nearest Neighbors} (kNN) na robustez perante o desbalanceamento de classes, alcançando taxas de precisão, sensibilidade e especificidade sistematicamente entre os 95,08\% e os 100\% na identificação final de falsos positivos \cite{moraes2017}. 
+
+Expandindo a aplicação empírica de Inteligência Artificial, Yauri et al. (2026) avaliaram o desempenho de modelos de \textit{Machine Learning} (ML) processando 98.321 registos reais extraídos de uma firewall Palo Alto num ambiente SIEM \cite{yauri2026}. O estudo aplicou técnicas rigorosas de pré-processamento, recorrendo ao agrupamento não supervisionado (\textit{K-Means}) para validação de especialistas, além da transformação de variáveis categóricas utilizando \textit{Weight of Evidence} (WoE) e \textit{Information Value} (IV) \cite{yauri2026}. Após a avaliação e afinação de hiperparâmetros em dez classificadores distintos, o modelo \textit{Gradient Boosting} destacou-se com uma área sob a curva (ROC-AUC) de 0.9964 e um \textit{F1-score} de 97.32\% \cite{yauri2026}. A eficácia da otimização refletiu-se de forma substancial na matriz de confusão: num universo de teste superior a 18.600 eventos, o modelo registou apenas 120 falsos positivos e 259 falsos negativos, validando a capacidade destes algoritmos em filtrar ruído sem comprometer a identificação atempada de incidentes críticos \cite{yauri2026}.
+
+Aprofundando a eficácia das abordagens construídas nativamente em plataformas SIEM, Bhardwaj (2026) propôs uma metodologia de \textit{threat hunting} focada na correlação comportamental para detetar vetores de acesso inicial (como documentos maliciosos e execução de \textit{LOLBins}) operando num ambiente \textit{Elasticsearch} \cite{bhardwaj2026}. O autor desenvolveu um modelo de Pontuação de Confiança de Ameaça (\textit{Threat Confidence Score} - TCS) baseado em pesquisas multicondicionais de linhagem de processos (relação pai-filho e argumentos de linha de comando) \cite{bhardwaj2026}. Num teste empírico que recorreu a telemetria real de produção, o sistema ingeriu exatamente 12.079.598 eventos de \textit{log} \cite{bhardwaj2026}. A aplicação desta lógica de triagem comportamental conseguiu reduzir este volume massivo para apenas 54 potenciais alertas \cite{bhardwaj2026}. Após validação, o modelo confirmou 3 verdadeiros positivos e suprimiu o ruído para apenas 2 falsos positivos, alcançando uma taxa de sensibilidade (\textit{recall}) perfeita de 1.0 e um \textit{F1-score} equilibrado de 75\% \cite{bhardwaj2026}. Embora estes resultados atestem uma elevada fiabilidade na filtragem de ruído sem dependência de algoritmos externos pesados, a limitação operacional desta solução reside na necessidade de desenhar, afinar e manter arquiteturas complexas de regras encadeadas e limiares de risco definidos manualmente por especialistas com base na \textit{framework} MITRE ATT\&CK \cite{bhardwaj2026}.
+
+Em contraponto ao sucesso da modelação comportamental, a aplicação recente de \textit{Large Language Models} (LLMs) na triagem de alertas SIEM tem revelado severas limitações operacionais \cite{rieger2026}. Num estudo comparativo exaustivo, Rieger et al. (2026) avaliaram modelos de ponta (como as famílias GPT-4, DeepSeek e Olmo 3) contra classificadores estatísticos e baseline tradicionais \cite{rieger2026}. Os resultados demonstraram que, embora os LLMs atinjam taxas de sensibilidade elevadas, geram uma quantidade insustentável de ruído e sofrem de sobreclassificação constante \cite{rieger2026}. O modelo \textit{Olmo 3}, por exemplo, registou uma taxa de falsos positivos (FPR) de 90.54\%, enquanto o \textit{GPT-4o-mini} atingiu 72.97\% de FPR, agravando severamente a fadiga de alertas que se propunham resolver \cite{rieger2026}. Além da imprecisão analítica, a latência computacional mostrou-se proibitiva para ambientes reais, com modelos a demorarem até 85.8 segundos (\textit{DeepSeek-Reasoner}) para processar um único alerta \cite{rieger2026}.
+
+Corroborando esta ineficiência e a complexidade operacional dos modelos generativos, Roy e Balde (2026) avaliaram o uso do modelo massivo \textit{Meta LLaMA 3.3-70B} na classificação de alertas de nível 1 num ambiente SIEM Wazuh \cite{roy2026}. A investigação demonstrou que, na ausência de contexto organizacional detalhado, o LLM assume um "viés de cautela" (gerando falsos positivos) e sofre de variabilidade nas suas decisões, alcançando uma precisão de apenas 80\% \cite{roy2026}. Embora os autores provem que a injeção contínua de ficheiros JSON com contexto estruturado consegue mitigar os falsos positivos, esta abordagem exige a integração e manutenção de bases de dados contextuais dinâmicas (como sistemas CMDB e IAM) acopladas a um modelo de 70 mil milhões de parâmetros \cite{roy2026}. 
+
+Em paralelo às abordagens generativas, arquiteturas híbridas como a plataforma GarudanEye, proposta por Mohanapriya et al. (2026), evidenciam o potencial de combinar múltiplos métodos de deteção com modelos matemáticos de desvio \cite{mohanapriya2026}. Processando 2,83 milhões de registos de tráfego de rede, o sistema integra classificação de \textit{Random Forest} com o cálculo de desvios padronizados (\textit{Z-scores}) para estabelecer perfis de anomalias com base na média e no desvio padrão das características da rede \cite{mohanapriya2026}. Esta abordagem híbrida resultou num FPR excecionalmente baixo de 0.0022 e numa precisão global de 96.91\% \cite{mohanapriya2026}, indicando que a identificação de anomalias com base em métodos estatísticos de desvio consegue diferenciar eficazmente o tráfego benigno das instâncias de ataque, mitigando o ruído de alertas com alta eficiência computacional \cite{mohanapriya2026}.
+
+Em suma, a literatura mais recente demonstra que a Inteligência Artificial pesada, embora promissora em testes isolados, introduz dependências arquitetónicas, propensão para falsos positivos e custos computacionais que contrariam a necessidade de agilidade e automação de um SOC. É exatamente para colmatar esta lacuna técnica e estrutural que o presente projeto se insere: em vez de recorrer a modelos \textit{black-box} morosos ou regras encadeadas manuais, propomos o uso nativo do \textbf{Desvio Padrão Dinâmico} e \textbf{Médias Móveis} diretamente no motor de correlação do SIEM. Esta abordagem procura isolar anomalias com um \textit{overhead} esperado reduzido, pretendendo minimizar falsos positivos em tempo real sem \textit{hardware} dispendioso ou treino complexo.
+
+\subsection{Síntese Comparativa}
+É crucial salientar que os resultados numéricos reportados na literatura não são diretamente comparáveis de forma absoluta, dado que os estudos utilizam \textit{datasets} (e.g., CICIDS2017 vs. telemetria real fechada), escalas operacionais e métricas primárias de avaliação distintas. Servem, ainda assim, como indicadores do comportamento das arquiteturas. A Tabela \ref{tab:comparativo} resume as metodologias analisadas e evidencia o posicionamento da nossa formulação estatística face às limitações identificadas.
+
+\begin{table}[h]
+    \centering
+    \caption{Comparativo das Abordagens na Literatura para Redução de Falsos Positivos em SIEM}
+    \vspace{0.3cm}
+    \resizebox{\textwidth}{!}{%
+    \begin{tabular}{|l|l|l|l|l|l|}
+    \hline
+    \textbf{Estudo} & \textbf{Metodologia / Tecnologia} & \textbf{Dataset / Escala} & \textbf{Métrica Principal} & \textbf{Vantagem Evidenciada} & \textbf{Limitação Operacional (SOC)} \\ \hline
+    Moraes et al. (2017) \cite{moraes2017} & Machine Learning (kNN e RF) & Logs Snort (2M alertas) & Precisão $\approx$ 100\% & Excelente classificação estática & Exige extração de dados e treino externo \\ \hline
+    Yauri et al. (2026) \cite{yauri2026} & Gradient Boosting & Logs Palo Alto (98K ev.) & ROC-AUC: 0.996 & Alta separação comportamental & Otimização complexa de hiperparâmetros \\ \hline
+    Bhardwaj (2026) \cite{bhardwaj2026} & Correlação Comportamental & Telemetria Real (12M logs) & F1-Score: 75\% & Filtra eventos fidedignos de ruído & Requer regras encadeadas complexas \\ \hline
+    Rieger et al. (2026) \cite{rieger2026} & LLMs vs. ML (Linear SVM) & Dataset simulado (178 alertas) & FPR: 90.5\% (LLMs) & ML leve supera LLMs na triagem & LLMs geram latência alta (85s) e ruído \\ \hline
+    Roy \& Balde (2026) \cite{roy2026} & LLMs (Meta LLaMA 3.3-70B) & Cyber-Range (55 alertas) & Accuracy: 100\% & Injeção direta de contexto & Exige manutenção contínua de bases \\ \hline
+    Mohanapriya et al. (2026) \cite{mohanapriya2026} & Híbrida (RF + Z-scores) & CICIDS2017 (2.8M logs) & FPR: 0.0022 & FPR excecionalmente baixo & Requer conjugação de múltiplos motores \\ \hline
+    \textbf{Nossa Proposta} & \textbf{Estatística Nativa (Splunk SPL)} & \textbf{Logs SSH Ubuntu (121 min)} & \textbf{FPR: 0,00\% | F-Score: 80\% (Vol.)} & \textbf{Baixa latência e 0\% de falsos positivos} & \textbf{Contaminação da \textit{baseline} em \textit{Low \& Slow}} \\ \hline
+    \end{tabular}%
+    }
+    \label{tab:comparativo}
+\end{table}
+
+\newpage
+
+\section{Proposta de Implementação Prática (Parte 2)}
+Para dar resposta à lacuna identificada no estado da arte e transpor o modelo matemático teórico para um cenário aplicacional, a Parte 2 deste projeto contemplará a implementação, simulação e validação empírica da deteção estatística de ataques de força bruta. A arquitetura laboratorial e metodológica será estruturada nos seguintes três eixos operacionais:
+
+\textbf{1. Arquitetura Laboratorial e Ingestão de Dados:}
+O ambiente de testes será suportado num laboratório isolado com recurso a virtualização. A máquina alvo (\textit{Vítima}) consistirá num servidor Linux (Ubuntu) com o serviço SSH exposto. Os \textit{logs} de autenticação (nomeadamente o ficheiro \texttt{/var/log/auth.log}) serão ativamente recolhidos e reencaminhados em tempo real através de um \textit{Universal Forwarder} para o motor principal do \textbf{Splunk Enterprise}, que atuará como o SIEM central do SOC.
+
+\textbf{2. Implementação do Motor Estatístico (SPL):}
+O cálculo da \textit{baseline} estatística dinâmica (equações da Secção 2.2) não recorrerá a treino externo. A implementação será feita nativamente no SIEM utilizando a \textit{Search Processing Language} (SPL) do Splunk. Através do uso de janelas deslizantes (comando \texttt{streamstats}), o SIEM calculará continuamente a média móvel ($\mu$) e o desvio padrão ($\sigma$) do volume de falhas de autenticação ($X_t$), disparando o alerta apenas quando o limite dinâmico ($\mu + k\sigma$) for ultrapassado, minimizando o ruído de fundo.
+
+\textbf{3. Simulação de Cenários e Extração de Métricas:}
+A partir de uma máquina atacante (\textbf{Kali Linux}), serão injetados dois tipos de ataque de força bruta recorrendo a ferramentas padronizadas (e.g., \textit{Hydra} ou \textit{Medusa}):
+\begin{itemize}
+    \item \textit{Ataque Volumétrico:} Para validar o tempo de resposta e o disparo do limiar de alerta imediato.
+    \item \textit{Ataque Low \& Slow:} Com intervalos aleatórios entre tentativas de \textit{login}, para avaliar o risco de contaminação lenta da \textit{baseline} estatística.
+\end{itemize}
+Durante estas simulações, será gerado tráfego legítimo em paralelo para permitir a extração rigorosa das métricas finais (Matriz de Confusão e FPR), demonstrando quantitativamente a superioridade deste modelo face à dependência de limites estáticos de alerta.
+
+
+
+
+
+\newpage
+\section{Implementação Prática e Validação Experimental}
+
+De acordo com a proposta delineada na secção anterior, implementou-se o protótipo de deteção estatística num ambiente laboratorial distribuído, com o objetivo de validar empiricamente o comportamento do limiar adaptativo perante ataques de força bruta de perfis distintos.
+
+\subsection{Configuração da Arquitetura Laboratorial}
+Para assegurar comunicação direta entre todas as componentes sem isolamento por NAT, configurou-se o laboratório em modo de rede \textit{Bridged} na sub-rede local (\texttt{192.168.1.0/24}), distribuído por três nós:
+
+\begin{itemize}
+    \item \textbf{Atacante (Kali Linux, \texttt{192.168.1.109}):} Máquina virtual responsável pela execução controlada de ataques de força bruta sobre o protocolo SSH com recurso à ferramenta \textit{Hydra}.
+    \item \textbf{Vítima (Ubuntu, \texttt{192.168.1.75}):} Servidor Linux com o serviço \textit{OpenSSH} ativo. Foi instalado o agente \textit{Splunk Universal Forwarder} (v9.1.2), configurado para monitorizar continuamente o ficheiro \texttt{/var/log/auth.log} (\textit{sourcetype} \texttt{syslog}) e reencaminhar os registos de autenticação em tempo real para o motor SIEM.
+    \item \textbf{Motor SIEM (Host Windows, \texttt{192.168.1.82}):} Instância do \textit{Splunk Enterprise} com receção ativa na porta TCP \texttt{9997} e regra de entrada correspondente na firewall do sistema, indexando os eventos recebidos no índice \texttt{main}.
+\end{itemize}
+
+\subsection{Implementação Nativa do Motor Estatístico (SPL)}
+A modelação matemática definida na Secção 2.2 foi traduzida diretamente para a linguagem \textit{Search Processing Language} (SPL) do Splunk (Listagem \ref{lst:spl_query}). Os eventos de autenticação falhada (\texttt{Failed password}) são agregados em intervalos de 1 minuto ($X_t$) e processados pelo comando \texttt{streamstats} sobre uma janela deslizante de 30 minutos ($N = 30$).
+
+\begin{lstlisting}[caption={Regra de deteção estatística adaptativa implementada em Splunk SPL.}, label={lst:spl_query}]
+index=main sourcetype=syslog "Failed password"
+| timechart span=1m count as falhas_atuais
+| streamstats current=false window=30 avg(falhas_atuais) as media_movel, stdev(falhas_atuais) as desvio_padrao
+| fillnull value=0 media_movel, desvio_padrao
+| eval epsilon = 1
+| eval k = 3
+| eval limiar = media_movel + (k * (desvio_padrao + epsilon))
+| eval alerta_disparado = if(falhas_atuais > limiar, "SIM (Ataque Forca Bruta)", "NAO (Ruido Normal)")
+| table _time, falhas_atuais, media_movel, desvio_padrao, limiar, alerta_disparado
+\end{lstlisting}
+
+A utilização do parâmetro \texttt{current=false} assegura que o instante atual $X_t$ é excluído do cálculo da média móvel ($\mu$) e do desvio padrão ($\sigma$), em conformidade estrita com as Equações (1) e (2). Adicionalmente, a constante residual $\epsilon = 1$ combinada com $k = 3$ garante um limiar mínimo de 3 tentativas por minuto em cenários de inatividade total ($\mu = 0, \sigma = 0$), prevenindo disparos erráticos por falhas isoladas de utilizadores legítimos.
+
+\subsection{Execução de Testes e Análise de Cenários}
+A validação do protótipo decorreu em três etapas progressivas, permitindo observar a reação do limiar dinâmico a diferentes ritmos de intrusão.
+
+\subsubsection{Teste de Validação Inicial}
+Para verificar o encaminhamento dos registos e a precisão do cálculo aritmético no Splunk com o parâmetro \texttt{current=false}, executou-se uma rajada curta de 8 palavras-passe contra a conta \texttt{root}. Conforme ilustrado na Figura \ref{fig:teste_inicial}, durante os 57 minutos iniciais sem tráfego o limiar manteve-se fixo em 3,00. No minuto do ataque (12:18), as 8 falhas registadas ultrapassaram claramente o limiar sem o contaminar no próprio instante, acionando o alerta de força bruta de imediato (\textit{F-Score} de 100\%). No minuto seguinte (12:19), a entrada do evento na janela deslizante elevou a média móvel para 0,27, o desvio padrão para 1,46 e o limiar adaptativo para 7,65.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{grafico_teste_inicial.png}
+    \caption{Validação inicial no Splunk: deteção do pico de 8 falhas face ao limiar base (3,00) e reajuste subsequente para 7,65.}
+    \label{fig:teste_inicial}
+\end{figure}
+
+\subsubsection{Cenário 1: Ataque Volumétrico}
+No primeiro cenário completo, lançou-se um ataque de alta intensidade recorrendo ao dicionário \texttt{fasttrack.txt} com quatro ligações paralelas:
+
+\begin{lstlisting}[caption={Comando Hydra executado no cenário de ataque volumétrico.}, label={lst:hydra_vol}]
+hydra -l root -P /usr/share/wordlists/fasttrack.txt ssh://192.168.1.75 -t 4
+\end{lstlisting}
+
+A Figura \ref{fig:ataque_volumetrico} evidencia a resposta do sistema ao longo de uma janela de 60 minutos (18:55 às 19:54). Após o período estável inicial com o limiar fixo em 3,00, o ataque iniciado às 19:46 gerou 312 tentativas falhadas em 6 minutos (pico de 85 falhas/min às 19:47), acionando o alerta de imediato e mantendo a deteção ativa durante os primeiros 4 minutos consecutivos (\textit{Precisão} de 100\% e \textit{F-Score} de 80,00\%). Nos últimos 2 minutos do ataque, a entrada dos picos anteriores na janela deslizante elevou o limiar até 91,49 falhas/min, ilustrando a rápida adaptação do algoritmo e o efeito de auto-contaminação da \textit{baseline} em rajadas prolongadas.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{grafico_volumetrico.png}
+    \caption{Evolução do limiar adaptativo no Splunk durante o ataque volumétrico de força bruta (18:55 às 19:54).}
+    \label{fig:ataque_volumetrico}
+\end{figure}
+
+\subsubsection{Cenário 2: Ataque Furtivo (\textit{Low \& Slow})}
+Para testar empiricamente a vulnerabilidade à contaminação da \textit{baseline} identificada na fundamentação teórica, restringiu-se o \textit{Hydra} a uma única ligação (\texttt{-t 1}) com intervalos de 15 segundos entre tentativas (\texttt{-W 15}):
+
+\begin{lstlisting}[caption={Comando Hydra executado no cenário de ataque furtivo (\textit{Low \& Slow}).}, label={lst:hydra_slow}]
+hydra -l root -P /usr/share/wordlists/fasttrack.txt ssh://192.168.1.75 -t 1 -W 15
+\end{lstlisting}
+
+Os resultados registados na Figura \ref{fig:ataque_slow} (janela de 61 minutos entre as 21:07 e as 22:07) confirmam o fenómeno teórico esperado. No arranque do ataque (21:18), ocorreram 3 falhas que igualaram exatamente o limiar inicial de 3,00 sem acionar alerta. Nos minutos seguintes, a persistência das tentativas (média de 2,00 falhas/min durante 15 minutos) inflacionou gradualmente a média móvel e o desvio padrão: quando o ataque atingiu o seu pico máximo de 4 falhas/min às 21:22, o limiar dinâmico já se encontrava contaminado em 6,21, atingindo um máximo de 8,01 às 21:33. O ataque foi assim assimilado como comportamento normal, gerando exclusivamente Falsos Negativos (FN).
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{grafico_low_slow.png}
+    \caption{Comportamento do limiar dinâmico durante o ataque \textit{Low \& Slow} (21:07 às 22:07), evidenciando a contaminação progressiva da \textit{baseline} e a recuperação posterior.}
+    \label{fig:ataque_slow}
+\end{figure}
+
+\subsection{Matriz de Confusão e Avaliação Quantitativa}
+Para quantificar o desempenho do protótipo segundo as métricas da Secção 2.3, cada janela temporal de 1 minuto foi classificada face à atividade real gerada em laboratório. Ao longo dos dois cenários principais analisaram-se 121 minutos no total: 60 minutos no cenário volumétrico (6 minutos de ataque com 312 falhas e pico de 85 falhas/min) e 61 minutos no cenário \textit{Low \& Slow} (15 minutos de ataque entre as 21:18 e as 21:32, totalizando 30 falhas com média de 2,00 falhas/min). A Tabela \ref{tab:matriz_confusao} apresenta a matriz de confusão global do modelo dinâmico.
+
+\begin{table}[H]
+    \centering
+    \caption{Matriz de Confusão Global do Modelo Estatístico Dinâmico (121 janelas de 1 minuto).}
+    \vspace{0.2cm}
+    \begin{tabular}{|l|c|c|c|}
+    \hline
+    \textbf{Classe Real \textbackslash \ Predição} & \textbf{Alerta (Positivo)} & \textbf{Normal (Negativo)} & \textbf{Total} \\ \hline
+    \textbf{Ataque Real} & $TP = 4$ & $FN = 17$ & $21$ \\ \hline
+    \textbf{Tráfego Benigno} & $FP = 0$ & $TN = 100$ & $100$ \\ \hline
+    \textbf{Total} & $4$ & $117$ & $121$ \\ \hline
+    \end{tabular}
+    \label{tab:matriz_confusao}
+\end{table}
+
+A Tabela \ref{tab:comparacao_modelos} detalha as métricas obtidas por cenário e contrasta o resultado global com uma regra de limiar estático convencional ($> 3$ falhas/min) aplicada sobre exatamente os mesmos registos.
+
+\begin{table}[H]
+    \centering
+    \caption{Desempenho quantitativo por cenário e comparação com limiar estático.}
+    \vspace{0.2cm}
+    \resizebox{\textwidth}{!}{%
+    \begin{tabular}{|l|c|c|c|c|c|c|}
+    \hline
+    \textbf{Cenário / Abordagem} & \textbf{Minutos} & \textbf{FPR} & \textbf{Precisão} & \textbf{Recall} & \textbf{Especificidade} & \textbf{F-Score} \\ \hline
+    Dinâmico -- Cenário 1 (Volumétrico) & 60 & 0,00\% & 100,00\% & 66,67\% & 100,00\% & 80,00\% \\ \hline
+    Dinâmico -- Cenário 2 (\textit{Low \& Slow}) & 61 & 0,00\% & N/A & 0,00\% & 100,00\% & 0,00\% \\ \hline
+    \textbf{Dinâmico -- Total Combinado} & \textbf{121} & \textbf{0,00\%} & \textbf{100,00\%} & \textbf{19,05\%} & \textbf{100,00\%} & \textbf{32,00\%} \\ \hline
+    Limiar Estático ($> 3$ falhas/min) & 121 & 0,00\% & 100,00\% & 33,33\% & 100,00\% & 50,00\% \\ \hline
+    \end{tabular}%
+    }
+    \label{tab:comparacao_modelos}
+\end{table}
+
+Os resultados experimentais validam duas propriedades críticas do modelo estatístico nativo em SPL. Em primeiro lugar, no cenário volumétrico o sistema detetou o incidente no exato primeiro minuto do ataque com 100\% de precisão, 0\% de falsos positivos e \textit{F-Score} de 80,00\%, embora a entrada dos picos de 85 e 77 falhas na janela deslizante tenha elevado o limiar até 91,49 falhas/min, gerando 2 falsos negativos nos minutos finais. Em segundo lugar, o cenário \textit{Low \& Slow} provou empiricamente a contaminação da \textit{baseline}: o limiar subiu gradualmente de 3,00 para 8,01 falhas/min sem acionar alertas, levando exatamente 31 minutos após o término do ataque (até às 22:03) para recuperar o patamar inicial de 3,00.
+
+Importa notar que, em ambiente laboratorial isolado sem ruído humano contínuo, o limiar estático obteve um \textit{F-Score} global superior (50,00\% face a 32,00\%) por não sofrer de contaminação da janela nem enfrentar picos benignos de utilizadores legítimos. Num SOC empresarial real com flutuações diárias de autenticações falhadas, um limiar fixo de 3 falhas/min desencadearia elevados volumes de falsos positivos. Ainda assim, a evidência obtida demonstra que o uso isolado de média e desvio padrão móveis deve ser complementado pela exclusão de pontos sinalizados da janela deslizante ou pela adoção do Desvio Absoluto da Mediana (MAD) para mitigar ataques furtivos prolongados.
+
+
+
+\section{Conclusões}
+O presente projeto abordou o problema da fadiga de alertas em Centros de Operações de Segurança (SOC), conjugando uma revisão sistemática da literatura com a implementação e validação empírica de um motor de deteção estatística nativo num ambiente SIEM. A análise dos seis estudos selecionados na revisão sistemática evidenciou que, embora as regras de limiar estático gerem volumes elevados de falsos positivos, a adoção de arquiteturas pesadas de Inteligência Artificial (como \textit{Large Language Models} e modelos complexos de \textit{Machine Learning}) acarreta latências proibitivas, custos computacionais elevados e dependência contínua de bases de contexto organizacional.
+
+Para endereçar esta lacuna, implementou-se o modelo de limiar adaptativo ($\mu + k(\sigma + \epsilon)$) diretamente na linguagem SPL do \textit{Splunk Enterprise}, suportado por uma arquitetura laboratorial distribuída com recolha de \textit{logs} SSH em tempo real via \textit{Universal Forwarder}. A utilização do comando \texttt{streamstats} sobre uma janela deslizante de 30 minutos (com exclusão do instante atual através de \texttt{current=false}) demonstrou ser operacionalmente viável, executando em tempo real sem necessidade de treino externo nem de infraestrutura dedicada.
+
+A validação experimental com ataques gerados em \textit{Kali Linux} permitiu confirmar quer o potencial quer as fronteiras operacionais da abordagem estatística:
+\begin{itemize}
+    \item \textbf{Eficácia em ataques volumétricos e supressão de ruído:} No teste de validação inicial (\textit{F-Score} de 100\%) e no cenário volumétrico (\textit{Precisão} de 100\%, \textit{FPR} de 0,00\% e \textit{F-Score} de 80,00\%), o sistema detetou a intrusão no exato primeiro minuto do ataque sem gerar falsos positivos. Contudo, o prolongamento da rajada de 312 falhas elevou o limiar até 91,49 falhas/min, causando dois falsos negativos nos minutos finais por auto-contaminação da janela.
+    \item \textbf{Prova empírica da contaminação da \textit{baseline}:} O cenário \textit{Low \& Slow} validou a limitação prevista na fundamentação teórica. A cadência reduzida (média de 2,00 falhas/min) foi gradualmente assimilada pela média móvel e pelo desvio padrão, empurrando o limiar de 3,00 para 8,01 falhas/min sem disparar alertas (\textit{Recall} de 0,00\%) e exigindo 31 minutos após o fim do ataque para a recuperação do patamar base.
+    \item \textbf{Compromisso face a limiares estáticos:} No cômputo global dos 121 minutos analisados, o modelo dinâmico manteve 0,00\% de falsos positivos e 100,00\% de precisão, mas registou um \textit{F-Score} combinado inferior ao de uma regra fixa de 3 falhas/min (32,00\% contra 50,00\%). Este resultado decorre da ausência de ruído benigno contínuo no laboratório isolado, onde um limiar estático não sofre penalização por falsos alarmes de utilizadores legítimos.
+\end{itemize}
+
+Conclui-se que a modelação estatística nativa em SIEM constitui uma primeira linha de defesa leve, transparente e eficaz contra ataques de força bruta volumétricos, eliminando o \textit{overhead} associado a soluções de inteligência artificial pesadas. Como trabalho futuro para superar a vulnerabilidade a ataques furtivos prolongados e a auto-contaminação da janela, recomenda-se a exclusão automática de instantes já sinalizados do cálculo histórico, a substituição do desvio padrão pelo Desvio Absoluto da Mediana (MAD), o recurso a janelas sazonais de longo prazo e a validação do protótipo sobre tráfego empresarial real com ruído humano contínuo.
+
+\newpage
+\renewcommand\refname{Referências}
+\begin{thebibliography}{9}
+\addcontentsline{toc}{section}{Referências}
+
+\bibitem{bhardwaj2026}
+Bhardwaj, A. (2026).
+\textit{Security framework for threat hunting advanced adversaries for initial level access}. \textit{Computer Networks}, 288, 112630. \url{https://doi.org/10.1016/j.comnet.2026.112630}
+
+\bibitem{mohanapriya2026}
+Mohanapriya, D., Dharsini, C., Arun, K., Jayapriya, M., \& Chandhru, V. (2026).
+\textit{GarudanEye: An Intelligent Threat Detection and Response Platform}. In \textit{Proceedings of the 4th International Conference on Self Sustainable Artificial Intelligence Systems (ICSSAS)}, 1738-1743, IEEE. \url{https://doi.org/10.1109/ICSSAS68835.2026.11559399}
+
+\bibitem{moraes2017}
+Moraes, E. A., Tojeiro, C. A. C., Miani, R. S., \& Zarpelão, B. B. (2017).
+\textit{Análise de Alertas de Sistemas de Detecção de Intrusão: Uso de Aprendizado Supervisionado na Redução de Alertas Falsos Positivos}. In \textit{Anais do XVII Simpósio Brasileiro de Segurança da Informação e de Sistemas Computacionais (SBSeg)}, 182-195, SBC.
+\url{https://doi.org/10.5753/sbseg.2017.19499}
+
+\bibitem{rieger2026}
+Rieger, M., Shah, A., Alam, A., \& Hossain, M. J. (2026).
+\textit{Possibilities and limitations of using large language models (LLMs) for alert classification and prioritisation in security operations centers (SOCs)}. \textit{Expert Systems With Applications}, 331, 133194. \url{https://doi.org/10.1016/j.eswa.2026.133194}
+
+\bibitem{roy2026}
+Roy, J., \& Balde, E. A. (2026).
+\textit{Toward Context-Aware Alert Classification in Security Operations Centers Using LLMs}. In \textit{5th IEEE International Conference on AI in Cybersecurity (ICAIC)}, Houston, TX, IEEE.
+\url{https://doi.org/10.1109/ICAIC67076.2026.11395735}
+
+\bibitem{yauri2026}
+Yauri, C., Gutiérrez, R., Cárdenas, J., \& Ticona, W. (2026).
+\textit{Model for Detecting Security Events from SIEM Logs Using Machine Learning Techniques}. \textit{Universidad ESAN \& Universidad Tecnológica de Perú}, Lima, Perú.
+\url{https://doi.org/10.1007/978-3-032-22091-2_14}
+
+\end{thebibliography}
+\end{document}
