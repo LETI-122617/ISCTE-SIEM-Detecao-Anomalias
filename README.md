@@ -112,7 +112,7 @@ Os cenários principais totalizaram **121 janelas de 1 minuto** (60 minutos no a
 
 ---
 
-## Estrutura Sugerida do Repositório
+## Estrutura do Repositório
 
 ```text
 ISCTE-SIEM-Deteccao-Anomalias/
